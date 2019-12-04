@@ -19,8 +19,8 @@ architecture rtl of rx is
 	signal detector_borda : std_logic; -- Retorna 1 caso a entrada mude de 1 para 0 (borda de descida)
 	signal b0, b1, b2, b3, b4, b5, b6, b7 : std_logic := '0'; -- Usados para a bufferização dos bits recebidos
 	signal sinal_saida_rx : std_logic_vector(7 downto 0) := "00000000"; -- Usado como buffer para a saída
-	signal conta_ciclo : integer range 1 to 5208 := 1; -- Conta cada ciclo de clock. Vai de 1 até 434 ou até 5208, dependendo do switch SW[9]
-	signal conta_bit: integer range 1 to 10 := 1; -- Conta os tempos de cada bit. Vai de 1 a 10
+	signal conta_ciclo : integer range 0 to 5208 := 0; -- Conta cada ciclo de clock. Vai de 1 até 434 ou até 5208, dependendo do switch SW[9]
+	signal conta_bit: integer range 0 to 10 := 0; -- Conta os tempos de cada bit. Vai de 1 a 10
 	signal max_conta_ciclo : integer range 434 to 5208; -- Limite máximo do contador de ciclo. Varia de acordo com o switch SW[9], mudando o baud rate
 	signal metade_conta_ciclo : integer range 217 to 2604; -- Metade do limite máximo do contador de ciclo. Usado para temporizar a amostragem dos bits
 begin
@@ -53,14 +53,14 @@ begin
 	contador : process (clock, reset) -- [ Responsavel pela contagem dos ciclos de clock e dos tempos de bit ]
 	begin
 		if reset = '0' then
-			conta_ciclo <= 1;
-			conta_bit <= 1;
+			conta_ciclo <= 0;
+			conta_bit <= 0;
 		elsif rising_edge(clock) then
 			if not(estado = s0) then -- Dispara o contador quando o estado sai do estado de 'espera' (consequência do recebimento do bit de começo) ¹
 				if conta_ciclo = max_conta_ciclo then -- Zera o contador de ciclos de clock quando o valor máximo - que depende do switch SW[9] - é atingido
-					conta_ciclo <= 1;
+					conta_ciclo <= 0;
 					if conta_bit = 10 then -- Zera o contador de tempo de bit ao atingir 10
-						conta_bit <= 1;
+						conta_bit <= 0;
 					else
 						conta_bit <= conta_bit+1;
 					end if;
@@ -84,19 +84,19 @@ begin
 						estado <= s0; -- Continua no estado de 'espera' caso o bit de começo não seja recebido
 					end if;
 				when s1 => -- Estado de 'começo' (s1)
-					if conta_bit = 2 then -- Muda o estado - de 'começo' para 'recepção' - após 1 tempo de bit (quando os bits de dados serão recebidos)
+					if conta_bit = 1 then -- Muda o estado - de 'começo' para 'recepção' - após 1 tempo de bit (quando bit de começo acaba)
 						estado <= s2;
 					else
 						estado <= s1; -- Continua no estado de 'começo' até 1 tempo de bit se passar
 					end if;
 				when s2 => -- Estado de 'recepção' (s2)
-					if conta_bit = 10 then -- Muda o estado - de 'recepção' para 'término' - após 10 tempos de bit (quando o bit de parada é recebido)
+					if conta_bit = 9 then -- Muda o estado - de 'recepção' para 'término' - após 10 tempos de bit (quando o bit de parada é recebido)
 						estado <= s3;
 					else
 						estado <= s2; -- Continua no estado de 'recepção' até 9 tempos de bit se passarem
 					end if;
 				when s3 => -- Estado de 'término' (s3)
-					if conta_bit = 10 and conta_ciclo = max_conta_ciclo then -- Retorna o estado para 'espera' ao se completar 10 tempos de bit
+					if conta_bit = 10 then -- Retorna o estado para 'espera' ao se completar 10 tempos de bit
 						estado <= s0;
 					else
 						estado <= s3; 
@@ -118,21 +118,21 @@ begin
 				when s2 =>
 					sinal_saida_rx <= sinal_saida_rx;
 					if conta_ciclo = metade_conta_ciclo then -- Armazena cada bit recebido nos seus respectivos buffers de bit
-						if conta_bit = 2 then
+						if conta_bit = 1 then
 							b0 <= entrada_rx;
-						elsif conta_bit = 3 then
+						elsif conta_bit = 2 then
 							b1 <= entrada_rx;
-						elsif conta_bit = 4 then
+						elsif conta_bit = 3 then
 							b2 <= entrada_rx;
-						elsif conta_bit = 5 then
+						elsif conta_bit = 4 then
 							b3 <= entrada_rx;
-						elsif conta_bit = 6 then
+						elsif conta_bit = 5 then
 							b4 <= entrada_rx;
-						elsif conta_bit = 7 then
+						elsif conta_bit = 6 then
 							b5 <= entrada_rx;
-						elsif conta_bit = 8 then
+						elsif conta_bit = 7 then
 							b6 <= entrada_rx;
-						elsif conta_bit = 9 then
+						elsif conta_bit = 8 then
 							b7 <= entrada_rx;	
 						end if;
 					end if;
