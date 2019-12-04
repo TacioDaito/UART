@@ -19,9 +19,9 @@ architecture rtl of rx is
 	signal detector_borda : std_logic; -- Retorna 1 caso a entrada mude de 1 para 0 (borda de descida)
 	signal b0, b1, b2, b3, b4, b5, b6, b7 : std_logic := '0'; -- Usados para a bufferização dos bits recebidos
 	signal sinal_saida_rx : std_logic_vector(7 downto 0) := "00000000"; -- Usado como buffer para a saída
-	signal conta_ciclo : integer range 0 to 5208 := 0; -- Conta cada ciclo de clock. Vai de 1 até 434 ou até 5208, dependendo do switch SW[9]
+	signal conta_ciclo : integer range 0 to 5207 := 0; -- Conta cada ciclo de clock. Vai de 1 até 434 ou até 5208, dependendo do switch SW[9]
 	signal conta_bit: integer range 0 to 10 := 0; -- Conta os tempos de cada bit. Vai de 1 a 10
-	signal max_conta_ciclo : integer range 434 to 5208; -- Limite máximo do contador de ciclo. Varia de acordo com o switch SW[9], mudando o baud rate
+	signal max_conta_ciclo : integer range 433 to 5207; -- Limite máximo do contador de ciclo. Varia de acordo com o switch SW[9], mudando o baud rate
 	signal metade_conta_ciclo : integer range 217 to 2604; -- Metade do limite máximo do contador de ciclo. Usado para temporizar a amostragem dos bits
 begin
 	detector_borda <= not r0_entrada_rx and r1_entrada_rx;
@@ -31,10 +31,10 @@ begin
 	begin
 		case switch_baud_rate is
 			when '0' =>
-				max_conta_ciclo <= 5208;
+				max_conta_ciclo <= 5207;
 				metade_conta_ciclo <= 2604;
 			when '1' =>
-				max_conta_ciclo <= 434;
+				max_conta_ciclo <= 433;
 				metade_conta_ciclo <= 217;
 		end case;
 	end process alterar_baud_rate;
