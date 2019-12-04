@@ -15,12 +15,12 @@ end entity;
 architecture rt2 of tx is
 	type estados is (s0, s1, s2, s3);
 	signal estado : estados := s0;
-	signal conta_ciclo : integer := 1;
-	signal conta_bit: integer:= 1;
+	signal conta_ciclo : integer range 0 to 5207 := 0;
+	signal conta_bit: integer range 0 to 10 := 0;
 	signal r0_botao : std_logic;
 	signal r1_botao : std_logic;
 	signal detector_borda : std_logic;
-	signal max_conta_ciclo : integer;
+	signal max_conta_ciclo : integer range 433 to 5207;
 begin
 	detector_borda <= not r0_botao and r1_botao;
 	
@@ -28,9 +28,9 @@ begin
 	begin
 		case switch_baud_rate is
 			when '0' =>
-				max_conta_ciclo <= 5208;
+				max_conta_ciclo <= 5207;
 			when '1' =>
-				max_conta_ciclo <= 434;
+				max_conta_ciclo <= 433;
 		end case;
 	end process alterar_baud_rate;
 	
@@ -48,14 +48,14 @@ begin
 	contador : process (clock, reset)
 	begin
 		if reset = '0' then
-			conta_ciclo <= 1;
-			conta_bit <= 1;
+			conta_ciclo <= 0;
+			conta_bit <= 0;
 		elsif rising_edge(clock) then
 			if not(estado = s0) then
 				if conta_ciclo = max_conta_ciclo then
-					conta_ciclo <= 1;
+					conta_ciclo <= 0;
 					if conta_bit = 10 then
-						conta_bit <= 1;
+						conta_bit <= 0;
 					else
 						conta_bit <= conta_bit+1;
 					end if;
@@ -79,19 +79,19 @@ begin
 						estado <= s0;
 					end if;
 				when s1 =>
-					if conta_bit = 2 then
+					if conta_bit = 1 then
 						estado <= s2;
 					else
 						estado <= s1;
 					end if;
 				when s2 =>
-					if conta_bit = 10 then
+					if conta_bit = 9 then
 						estado <= s3;
 					else
 						estado <= s2;
 					end if;
 				when s3 =>
-					if conta_bit = 10 and conta_ciclo = max_conta_ciclo then
+					if conta_bit = 10 then
 						estado <= s0;
 					else
 						estado <= s3;
@@ -111,21 +111,21 @@ begin
 				when s1 =>
 					saida_tx <= '0';
 				when s2 =>
-					if conta_bit = 2 then
+					if conta_bit = 1 then
 						saida_tx <= entrada_tx(0);
-					elsif conta_bit = 3 then
+					elsif conta_bit = 2 then
 						saida_tx <= entrada_tx(1);
-					elsif conta_bit = 4 then
+					elsif conta_bit = 3 then
 						saida_tx <= entrada_tx(2);
-					elsif conta_bit = 5 then
+					elsif conta_bit = 4 then
 						saida_tx <= entrada_tx(3);
-					elsif conta_bit = 6 then
+					elsif conta_bit = 5 then
 						saida_tx <= entrada_tx(4);
-					elsif conta_bit = 7 then
+					elsif conta_bit = 6 then
 						saida_tx <= entrada_tx(5);
-					elsif conta_bit = 8 then
+					elsif conta_bit = 7 then
 						saida_tx <= entrada_tx(6);
-					elsif conta_bit = 9 then
+					elsif conta_bit = 8 then
 						saida_tx <= entrada_tx(7);	
 					end if;
 				when s3 =>
