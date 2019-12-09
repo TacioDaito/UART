@@ -7,7 +7,7 @@ use ieee.std_logic_1164.all;
 
 entity tx is
 	port(
-		clock, reset, switch_baud_rate, botao_envio : in	std_logic;
+		clock, reset, botao_envio : in	std_logic;
 		entrada_tx : in	std_logic_vector(7 downto 0);
 		saida_tx : out	std_logic
 	);
@@ -21,19 +21,9 @@ architecture rt2 of tx is
 	signal r0_botao : std_logic;
 	signal r1_botao : std_logic;
 	signal detector_borda : std_logic;
-	signal max_conta_ciclo : integer range 433 to 5207;
+	signal max_conta_ciclo : integer := 5207;
 begin
 	detector_borda <= not r0_botao and r1_botao;
-	
-	alterar_baud_rate : process(switch_baud_rate)
-	begin
-		case switch_baud_rate is
-			when '0' =>
-				max_conta_ciclo <= 5207;
-			when '1' =>
-				max_conta_ciclo <= 433;
-		end case;
-	end process alterar_baud_rate;
 	
 	detector_borda_descida : process(clock, reset)
 	begin
