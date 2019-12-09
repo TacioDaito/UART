@@ -7,7 +7,7 @@ use ieee.std_logic_1164.all;
 
 entity rx is
 	port(
-		clock, reset, switch_baud_rate, entrada_rx : in	std_logic; -- Entradas do bloco RX
+		clock, reset, entrada_rx : in	std_logic; -- Entradas do bloco RX
 		saida_rx : out	std_logic_vector(7 downto 0) -- Saída do bloco RX (vetor de 8 bits) -- vai para os leds
 	);
 end entity;
@@ -22,23 +22,11 @@ architecture rtl of rx is
 	signal sinal_saida_rx : std_logic_vector(7 downto 0) := "00000000"; -- Usado como buffer para a saída
 	signal conta_ciclo : integer range 0 to 5207 := 0; -- Conta cada ciclo de clock. Vai de 1 até 434 ou até 5208, dependendo do switch SW[9]
 	signal conta_bit: integer range 0 to 10 := 0; -- Conta os tempos de cada bit. Vai de 1 a 10
-	signal max_conta_ciclo : integer range 433 to 5207; -- Limite máximo do contador de ciclo. Varia de acordo com o switch SW[9], mudando o baud rate
-	signal metade_conta_ciclo : integer range 217 to 2604; -- Metade do limite máximo do contador de ciclo. Usado para temporizar a amostragem dos bits
+	signal max_conta_ciclo : integer := 5207; -- Limite máximo do contador de ciclo. Varia de acordo com o switch SW[9], mudando o baud rate
+	signal metade_conta_ciclo : integer := 2604; -- Metade do limite máximo do contador de ciclo. Usado para temporizar a amostragem dos bits
 begin
 	detector_borda <= not r0_entrada_rx and r1_entrada_rx;
 	saida_rx <= sinal_saida_rx; -- Associa o valor da saída com o seu buffer
-	
-	alterar_baud_rate : process(switch_baud_rate) -- [ Responsável pela alteração e atribuição dos valores de baud rate ]
-	begin
-		case switch_baud_rate is
-			when '0' =>
-				max_conta_ciclo <= 5207;
-				metade_conta_ciclo <= 2604;
-			when '1' =>
-				max_conta_ciclo <= 433;
-				metade_conta_ciclo <= 217;
-		end case;
-	end process alterar_baud_rate;
 	
 	detector_borda_descida : process(clock, reset) -- [ Responsável por detectar o recebimento do bit de começo ]
 	begin
